@@ -25,6 +25,21 @@ public:
 	bool OnUserUpdate(float fElapsedTime) override {
 		Clear(olc::WHITE);
 
+		olc::vi2d vMouse{ GetMouseX(), GetMouseY() };
+		olc::vi2d vCell{ vMouse.x / vTileSize.x, vMouse.y / vTileSize.y };
+		olc::vi2d vOffset{ vMouse.x % vTileSize.x, vMouse.y % vTileSize.y };
+		olc::Pixel col = sprIsom->GetPixel(3 * vTileSize.x + vOffset.x, vOffset.y);
+
+		olc::vi2d vSelected{
+			 (vCell.y - vOrigin.y) + (vCell.x - vOrigin.x),
+			 (vCell.y - vOrigin.y) - (vCell.x - vOrigin.x)
+		};
+
+		if (col == olc::RED)    vSelected += {-1, +0};
+		if (col == olc::BLUE)   vSelected += {+0, -1};
+		if (col == olc::GREEN)  vSelected += {+0, +1};
+		if (col == olc::YELLOW) vSelected += {+1, +0};
+
 		auto ToScreen = [&](int x, int y) {
 			return olc::vi2d{
 				(vOrigin.x * vTileSize.x) + (x - y) * (vTileSize.x / 2),
@@ -40,11 +55,63 @@ public:
 				switch (pWorld[y * vWorldSize.x + x]) {
 					case 0:
 						// Invisible Tile
-						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 1 * vTileSize.x, 0, vTileSize.x, vTileSize.y);
+						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 1 * vTileSize.x, 0 * vTileSize.y, vTileSize.x, vTileSize.y);
+						break;
+					case 1:
+						// Grass Tile
+						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 2 * vTileSize.x, 0 * vTileSize.y, vTileSize.x, vTileSize.y);
+						break;
+					case 2:
+						// White tile
+						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 3 * vTileSize.x, 0 * vTileSize.y, vTileSize.x, vTileSize.y);
+						break;
+					case 3:
+						// Pine tree
+						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 0 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
+						break;
+					case 4:
+						// Dead tree
+						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 1 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
+						break;
+					case 5:
+						// Sand tile
+						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 2 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
+						break;
+					case 6:
+						// Water Tile
+						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 3 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
+						break;
 				}
 			}
 		}
+
+		SetPixelMode(olc::Pixel::ALPHA);
+		olc::vi2d vSelectedWorld = ToScreen(vSelected.x, vSelected.y);
+		// Draws the selected tile sprite over the selected world cell
+		if ((vSelected.x < vWorldSize.x) && (vSelected.y < vWorldSize.y) && (vSelected.x >= 0) && (vSelected.y >= 0))
+			DrawPartialSprite(vSelectedWorld.x, vSelectedWorld.y, sprIsom, 0 * vTileSize.x, 0, vTileSize.x, vTileSize.y);
+		
 		SetPixelMode(olc::Pixel::NORMAL);
+
+		// Set the seletec tile
+		if (GetMouse(0).bPressed) {
+			pWorld[vSelected.x + (vSelected.y * vWorldSize.x)]++;
+			if (pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] > 6) pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] = 0;
+		}
+		if (GetMouse(1).bPressed) {
+			pWorld[vSelected.x + (vSelected.y * vWorldSize.x)]--;
+			if (pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] < 0) pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] = 6;
+		}
+
+		// Draws Red rectangle around the selected screen cell
+		// DrawRect(vCell.x * vTileSize.x, vCell.y * vTileSize.y, vTileSize.x, vTileSize.y, olc::RED);
+		
+		DrawString(4, 4, "Mouse: " + std::to_string(vMouse.x) + ", " + std::to_string(vMouse.y), olc::BLACK);
+		// Tells us what screen Cell is selected
+		// DrawString(4, 14, "Cell : " + std::to_string(vCell.x) + ", " + std::to_string(vCell.y), olc::BLACK);
+		DrawString(4, 24, "Selected : " + std::to_string(vSelected.x) + ", " + std::to_string(vSelected.y), olc::BLACK);
+		DrawString(4, 34, "Tile : " + std::to_string(pWorld[vSelected.x + (vSelected.y * vWorldSize.x)]), olc::BLACK);
+		DrawString(4, 44, "WIndex : " + std::to_string(vSelected.x + (vSelected.y * vWorldSize.x)), olc::BLACK);
 
 		return true;
 	}
