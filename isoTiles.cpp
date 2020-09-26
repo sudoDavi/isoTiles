@@ -62,24 +62,20 @@ public:
 						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 2 * vTileSize.x, 0 * vTileSize.y, vTileSize.x, vTileSize.y);
 						break;
 					case 2:
-						// White tile
-						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 3 * vTileSize.x, 0 * vTileSize.y, vTileSize.x, vTileSize.y);
+						// Pine tree
+						DrawPartialSprite(vWorld.x, vWorld.y - vTileSize.y, sprIsom, 0 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, 2 * vTileSize.y);
 						break;
 					case 3:
-						// Pine tree
-						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 0 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
+						// Dead tree
+						DrawPartialSprite(vWorld.x, vWorld.y - vTileSize.y, sprIsom, 1 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, 2 * vTileSize.y);
 						break;
 					case 4:
-						// Dead tree
-						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 1 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
+						// Sand tile
+						DrawPartialSprite(vWorld.x, vWorld.y - vTileSize.y, sprIsom, 2 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, 2 * vTileSize.y);
 						break;
 					case 5:
-						// Sand tile
-						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 2 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
-						break;
-					case 6:
-						// Water Tile
-						DrawPartialSprite(vWorld.x, vWorld.y, sprIsom, 3 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, vTileSize.y);
+						// Water tile
+						DrawPartialSprite(vWorld.x, vWorld.y - vTileSize.y, sprIsom, 3 * vTileSize.x, 1 * vTileSize.y, vTileSize.x, 2 * vTileSize.y);
 						break;
 				}
 			}
@@ -87,21 +83,25 @@ public:
 
 		SetPixelMode(olc::Pixel::ALPHA);
 		olc::vi2d vSelectedWorld = ToScreen(vSelected.x, vSelected.y);
-		// Draws the selected tile sprite over the selected world cell
-		if ((vSelected.x < vWorldSize.x) && (vSelected.y < vWorldSize.y) && (vSelected.x >= 0) && (vSelected.y >= 0))
-			DrawPartialSprite(vSelectedWorld.x, vSelectedWorld.y, sprIsom, 0 * vTileSize.x, 0, vTileSize.x, vTileSize.y);
 		
-		SetPixelMode(olc::Pixel::NORMAL);
 
-		// Set the seletec tile
-		if (GetMouse(0).bPressed) {
-			pWorld[vSelected.x + (vSelected.y * vWorldSize.x)]++;
-			if (pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] > 6) pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] = 0;
+		if ((vSelected.x < vWorldSize.x) && (vSelected.y < vWorldSize.y) && (vSelected.x >= 0) && (vSelected.y >= 0)) {
+			// Draws the selected tile sprite over the selected world cell
+			DrawPartialSprite(vSelectedWorld.x, vSelectedWorld.y, sprIsom, 0 * vTileSize.x, 0, vTileSize.x, vTileSize.y);
+
+			if (GetMouse(0).bPressed)
+				// Set the seleted tile +1
+				++pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] %= 6;
+
+			if (GetMouse(1).bPressed) {
+				// Set the seleted tile -1
+				--pWorld[vSelected.x + (vSelected.y * vWorldSize.x)];
+				if (pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] < 0)
+					pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] = 6;
+			}
 		}
-		if (GetMouse(1).bPressed) {
-			pWorld[vSelected.x + (vSelected.y * vWorldSize.x)]--;
-			if (pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] < 0) pWorld[vSelected.x + (vSelected.y * vWorldSize.x)] = 6;
-		}
+
+		SetPixelMode(olc::Pixel::NORMAL);
 
 		// Draws Red rectangle around the selected screen cell
 		// DrawRect(vCell.x * vTileSize.x, vCell.y * vTileSize.y, vTileSize.x, vTileSize.y, olc::RED);
